@@ -12,14 +12,14 @@ const VEHICLE_DEFS = {
 };
 
 const VEHICLE_COLORS = {
-  compact:['#28e0e0','#7c4dff','#4dff88'],
-  sedan:['#c9c9c9','#8a8a9a','#5566cc'],
-  sports:['#ff2e88','#ffd23f','#ff7043'],
-  pickup:['#a0522d','#5a5a5a'],
-  van:['#e0e0e0','#889'],
+  compact:['#4a7fb5','#8a3b3b','#3f6b46'],
+  sedan:['#c9c9c9','#5a5a62','#38455e'],
+  sports:['#b5252f','#d1a022','#2c2c34'],
+  pickup:['#8a5a34','#5a5a5a'],
+  van:['#d8d8d0','#7a7a72'],
   truck:['#6b7280'],
-  taxi:['#ffd23f'],
-  police:['#1c1f4d']
+  taxi:['#e0b02c'],
+  police:['#22262e']
 };
 
 let vehicleIdCounter = 0;
