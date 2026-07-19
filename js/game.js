@@ -535,21 +535,53 @@ function drawNightOverlayScreen(){
 }
 
 function drawRoads(){
-  const scale = 1;
   const startX = Math.floor((State.camera.x-CONFIG.CANVAS_W)/CONFIG.BLOCK)*CONFIG.BLOCK;
   const endX = State.camera.x+CONFIG.CANVAS_W;
   const startY = Math.floor((State.camera.y-CONFIG.CANVAS_H)/CONFIG.BLOCK)*CONFIG.BLOCK;
   const endY = State.camera.y+CONFIG.CANVAS_H;
-  gctx.fillStyle = '#3a3a46';
+
+  gctx.fillStyle = '#4a4a4e';
   for(let x=startX; x<endX; x+=CONFIG.BLOCK) gctx.fillRect(x,0,CONFIG.ROAD_W,CONFIG.WORLD_H);
   for(let y=startY; y<endY; y+=CONFIG.BLOCK) gctx.fillRect(0,y,CONFIG.WORLD_W,CONFIG.ROAD_W);
-  gctx.strokeStyle = 'rgba(255,210,63,0.5)';
-  gctx.setLineDash([14,14]);
-  gctx.lineWidth = 2;
+
+  // center double-yellow line on each corridor
+  gctx.strokeStyle = '#e8c93f';
+  gctx.lineWidth = 1.6;
   for(let x=startX; x<endX; x+=CONFIG.BLOCK){
-    gctx.beginPath(); gctx.moveTo(x+CONFIG.ROAD_W/2,startY); gctx.lineTo(x+CONFIG.ROAD_W/2,endY); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(x+CONFIG.ROAD_W/2-2,startY); gctx.lineTo(x+CONFIG.ROAD_W/2-2,endY); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(x+CONFIG.ROAD_W/2+2,startY); gctx.lineTo(x+CONFIG.ROAD_W/2+2,endY); gctx.stroke();
+  }
+  for(let y=startY; y<endY; y+=CONFIG.BLOCK){
+    gctx.beginPath(); gctx.moveTo(startX,y+CONFIG.ROAD_W/2-2); gctx.lineTo(endX,y+CONFIG.ROAD_W/2-2); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(startX,y+CONFIG.ROAD_W/2+2); gctx.lineTo(endX,y+CONFIG.ROAD_W/2+2); gctx.stroke();
+  }
+
+  // white dashed lane-edge lines
+  gctx.strokeStyle = 'rgba(255,255,255,0.55)';
+  gctx.setLineDash([10,10]);
+  gctx.lineWidth = 1.3;
+  for(let x=startX; x<endX; x+=CONFIG.BLOCK){
+    gctx.beginPath(); gctx.moveTo(x+10,startY); gctx.lineTo(x+10,endY); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(x+CONFIG.ROAD_W-10,startY); gctx.lineTo(x+CONFIG.ROAD_W-10,endY); gctx.stroke();
+  }
+  for(let y=startY; y<endY; y+=CONFIG.BLOCK){
+    gctx.beginPath(); gctx.moveTo(startX,y+10); gctx.lineTo(endX,y+10); gctx.stroke();
+    gctx.beginPath(); gctx.moveTo(startX,y+CONFIG.ROAD_W-10); gctx.lineTo(endX,y+CONFIG.ROAD_W-10); gctx.stroke();
   }
   gctx.setLineDash([]);
+
+  // crosswalks at each intersection
+  gctx.fillStyle = 'rgba(255,255,255,0.5)';
+  for(let x=startX; x<endX; x+=CONFIG.BLOCK){
+    for(let y=startY; y<endY; y+=CONFIG.BLOCK){
+      for(let i=0;i<CONFIG.ROAD_W;i+=10){
+        gctx.fillRect(x+i,y-6,5,6);
+        gctx.fillRect(x+i,y+CONFIG.ROAD_W,5,6);
+        gctx.fillRect(x-6,y+i,6,5);
+        gctx.fillRect(x+CONFIG.ROAD_W,y+i,6,5);
+      }
+    }
+  }
 }
 
 function drawWater(){
@@ -570,19 +602,67 @@ function drawBuildings(){
   for(const b of World.buildings){
     if(b.x+b.w < State.camera.x-CONFIG.CANVAS_W/2-margin || b.x > State.camera.x+CONFIG.CANVAS_W/2+margin) continue;
     if(b.y+b.h < State.camera.y-CONFIG.CANVAS_H/2-margin || b.y > State.camera.y+CONFIG.CANVAS_H/2+margin) continue;
+
+    if(b.isPark){
+      gctx.fillStyle = '#3a5a40';
+      gctx.fillRect(b.x-6,b.y-6,b.w+12,b.h+12);
+      gctx.fillStyle = b.color;
+      gctx.fillRect(b.x,b.y,b.w,b.h);
+      if(b.trees){
+        for(const t of b.trees){
+          gctx.fillStyle = '#1e3a22';
+          gctx.beginPath(); gctx.arc(b.x+t.x,b.y+t.y,t.r,0,Math.PI*2); gctx.fill();
+          gctx.fillStyle = '#345c3a';
+          gctx.beginPath(); gctx.arc(b.x+t.x-2,b.y+t.y-2,t.r*0.7,0,Math.PI*2); gctx.fill();
+        }
+      }
+      continue;
+    }
+
+    // sidewalk / curb
+    gctx.fillStyle = '#8a8a82';
+    gctx.fillRect(b.x-7,b.y-7,b.w+14,b.h+14);
+    gctx.fillStyle = 'rgba(0,0,0,0.22)';
+    gctx.fillRect(b.x-4,b.y-4,b.w+8,b.h+8);
+
     // shadow
-    gctx.fillStyle = 'rgba(0,0,0,0.25)';
-    gctx.fillRect(b.x+5,b.y+5,b.w,b.h);
+    gctx.fillStyle = 'rgba(0,0,0,0.28)';
+    gctx.fillRect(b.x+6,b.y+6,b.w,b.h);
+    // rooftop body
     gctx.fillStyle = b.color;
     gctx.fillRect(b.x,b.y,b.w,b.h);
-    if(!b.isPark){
-      gctx.strokeStyle = 'rgba(255,255,255,0.06)';
-      for(let i=1;i<4;i++){
-        gctx.beginPath(); gctx.moveTo(b.x,b.y+b.h*i/4); gctx.lineTo(b.x+b.w,b.y+b.h*i/4); gctx.stroke();
+    gctx.strokeStyle = 'rgba(0,0,0,0.35)';
+    gctx.lineWidth = 2;
+    gctx.strokeRect(b.x,b.y,b.w,b.h);
+
+    // window grid
+    const cols = Math.max(2, Math.round(b.w/24));
+    const rows = Math.max(2, Math.round(b.h/24));
+    const cw = b.w/cols, ch = b.h/rows;
+    for(let r=0;r<rows;r++){
+      for(let c=0;c<cols;c++){
+        const wx = b.x + c*cw + cw*0.18, wy = b.y + r*ch + ch*0.18;
+        const ww = cw*0.64, wh = ch*0.64;
+        gctx.fillStyle = ((r+c)%3===0) ? 'rgba(255,235,180,0.16)' : 'rgba(0,0,0,0.18)';
+        gctx.fillRect(wx,wy,ww,wh);
       }
-    } else {
-      gctx.fillStyle = '#2c5a3f';
-      gctx.fillRect(b.x+10,b.y+10,Math.max(0,b.w-20),Math.max(0,b.h-20));
+    }
+
+    // rooftop details
+    if(b.roofType==='vents'){
+      gctx.fillStyle = 'rgba(0,0,0,0.3)';
+      gctx.fillRect(b.x+b.w*0.2,b.y+b.h*0.2,b.w*0.16,b.h*0.16);
+      gctx.fillRect(b.x+b.w*0.6,b.y+b.h*0.55,b.w*0.14,b.h*0.14);
+    } else if(b.roofType==='helipad'){
+      gctx.strokeStyle = 'rgba(255,255,255,0.55)';
+      gctx.lineWidth = 2;
+      const cx = b.x+b.w/2, cy = b.y+b.h/2, r = Math.min(b.w,b.h)*0.28;
+      gctx.beginPath(); gctx.arc(cx,cy,r,0,Math.PI*2); gctx.stroke();
+      gctx.fillStyle = 'rgba(255,255,255,0.55)';
+      gctx.font = (r*0.9)+'px monospace';
+      gctx.textAlign = 'center';
+      gctx.fillText('H', cx, cy+r*0.32);
+      gctx.textAlign = 'left';
     }
   }
 }
@@ -680,21 +760,55 @@ function drawVehicle(car, isPlayer){
   gctx.translate(car.x,car.y);
   gctx.rotate(car.angle);
   const w = car.def.w, h = car.def.h;
-  gctx.fillStyle = 'rgba(0,0,0,0.25)';
-  gctx.fillRect(-w/2+2,-h/2+2,w,h);
+
+  // shadow
+  gctx.fillStyle = 'rgba(0,0,0,0.3)';
+  roundedRectPath(gctx, -w/2+2, -h/2+2, w, h, 3);
+  gctx.fill();
+
+  // body
   gctx.fillStyle = car.color;
-  gctx.fillRect(-w/2,-h/2,w,h);
-  gctx.fillStyle = 'rgba(0,0,0,0.4)';
-  gctx.fillRect(-w/2+w*0.18,-h/2+2,w*0.5,h-4);
+  roundedRectPath(gctx, -w/2, -h/2, w, h, 3);
+  gctx.fill();
+  gctx.strokeStyle = 'rgba(0,0,0,0.5)';
+  gctx.lineWidth = 1;
+  roundedRectPath(gctx, -w/2, -h/2, w, h, 3);
+  gctx.stroke();
+
+  // windshield (front) + rear window
+  gctx.fillStyle = 'rgba(20,26,34,0.85)';
+  gctx.fillRect(w*0.06, -h/2+2, w*0.28, h-4);
+  gctx.fillStyle = 'rgba(20,26,34,0.7)';
+  gctx.fillRect(-w/2+3, -h/2+2, w*0.16, h-4);
+
+  // headlights & taillights
+  gctx.fillStyle = '#fff6c8';
+  gctx.fillRect(w/2-2.5, -h/2+1.5, 2.5, 2.5);
+  gctx.fillRect(w/2-2.5, h/2-4, 2.5, 2.5);
+  gctx.fillStyle = '#ff3b3b';
+  gctx.fillRect(-w/2, -h/2+1.5, 2.5, 2.5);
+  gctx.fillRect(-w/2, h/2-4, 2.5, 2.5);
+
   if(car.isPoliceUnit){
     gctx.fillStyle = performance.now()%400<200 ? '#ff2e2e' : '#2e5cff';
-    gctx.fillRect(-4,-h/2-2,8,3);
+    gctx.fillRect(-4,-h/2-3,8,3);
   }
   if(isPlayer){
-    gctx.strokeStyle = '#28e0e0'; gctx.lineWidth=2;
-    gctx.strokeRect(-w/2,-h/2,w,h);
+    gctx.strokeStyle = '#28e0e0'; gctx.lineWidth=1.5;
+    roundedRectPath(gctx, -w/2, -h/2, w, h, 3);
+    gctx.stroke();
   }
   gctx.restore();
+}
+
+function roundedRectPath(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x+r,y);
+  ctx.arcTo(x+w,y,x+w,y+h,r);
+  ctx.arcTo(x+w,y+h,x,y+h,r);
+  ctx.arcTo(x,y+h,x,y,r);
+  ctx.arcTo(x,y,x+w,y,r);
+  ctx.closePath();
 }
 
 function drawPlayerOnFoot(){
