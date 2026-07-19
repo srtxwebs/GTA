@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>ASHFORD BAY</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div id="game-wrapper">
+  <canvas id="game" width="960" height="600"></canvas>
+  <canvas id="minimap" width="150" height="150"></canvas>
+  <div id="scanlines"></div>
+  <div id="damage-flash"></div>
+  <div id="fade-overlay"></div>
+
+  <!-- ===== IN-GAME HUD ===== -->
+  <div id="hud">
+    <div id="top-bar">
+      <span id="district-name">ASHFORD BAY</span>
+      <span id="score-val">$0</span>
+    </div>
+
+    <div id="hud-left">
+      <div class="bar-row"><span class="bar-label">HP</span><div class="bar-bg"><div id="health-bar" class="bar-fill hp"></div></div></div>
+      <div class="bar-row"><span class="bar-label">AR</span><div class="bar-bg"><div id="armor-bar" class="bar-fill ar"></div></div></div>
+    </div>
+
+    <div id="hud-stars">
+      <div id="wanted-stars"></div>
+    </div>
+
+    <div id="hud-weapon">
+      <span id="weapon-name">Fists</span>
+      <span id="weapon-ammo"></span>
+    </div>
+
+    <div id="hud-vehicle" style="display:none;">
+      <span id="vehicle-name"></span>
+      <div class="bar-bg small"><div id="vehicle-health-bar" class="bar-fill vh"></div></div>
+      <span id="vehicle-speed"></span>
+    </div>
+
+    <div id="objective-box">
+      <div id="objective-text">Explore Ashford Bay. Find a contact marker to start a job.</div>
+      <div id="mission-timer"></div>
+    </div>
+
+    <div id="prompt-text"></div>
+    <div id="notifications"></div>
+    <div id="fps-counter"></div>
+  </div>
+
+  <!-- ===== DIALOGUE ===== -->
+  <div id="dialogue-box" class="hidden">
+    <div id="dialogue-name"></div>
+    <div id="dialogue-text"></div>
+    <div id="dialogue-hint">Press SPACE to continue</div>
+  </div>
+
+  <!-- ===== MISSION BANNERS ===== -->
+  <div id="mission-banner" class="hidden">
+    <div id="banner-title"></div>
+    <div id="banner-sub"></div>
+  </div>
+
+  <!-- ===== BIG MAP ===== -->
+  <div id="bigmap-overlay" class="hidden">
+    <canvas id="bigmap" width="700" height="700"></canvas>
+    <div class="hint">Press M to close</div>
+  </div>
+
+  <!-- ===== MAIN MENU ===== -->
+  <div id="main-menu" class="screen">
+    <canvas id="menu-bg" width="960" height="600"></canvas>
+    <div class="menu-overlay">
+      <h1 class="game-logo">ASHFORD BAY</h1>
+      <div class="menu-list">
+        <button data-action="new-game">New Game</button>
+        <button data-action="continue-game" id="continue-btn" disabled>Continue Game</button>
+        <button data-action="mission-select">Mission Select</button>
+        <button data-action="settings">Settings</button>
+        <button data-action="controls">Controls</button>
+        <button data-action="credits">Credits</button>
+        <button data-action="reset-progress">Reset Progress</button>
+        <button data-action="fullscreen">Fullscreen</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== NEW GAME CONFIRM ===== -->
+  <div id="newgame-confirm" class="screen hidden">
+    <div class="panel-box">
+      <h2>Overwrite Saved Game?</h2>
+      <p>A saved game already exists. Starting a new game will erase it.</p>
+      <div class="panel-buttons">
+        <button data-action="confirm-newgame">Start New Game</button>
+        <button data-action="cancel-newgame">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== INTRO ===== -->
+  <div id="intro-screen" class="screen hidden">
+    <div id="intro-text"></div>
+    <div class="hint">Press ENTER / SPACE / ESC to skip</div>
+  </div>
+
+  <!-- ===== PAUSE MENU ===== -->
+  <div id="pause-menu" class="screen hidden">
+    <div class="panel-box">
+      <h2>PAUSED</h2>
+      <div class="menu-list">
+        <button data-action="resume">Resume</button>
+        <button data-action="restart-mission">Restart Mission</button>
+        <button data-action="save-game">Save Game</button>
+        <button data-action="settings">Settings</button>
+        <button data-action="controls">Controls</button>
+        <button data-action="main-menu">Return to Main Menu</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS ===== -->
+  <div id="settings-panel" class="screen hidden">
+    <div class="panel-box wide">
+      <h2>SETTINGS</h2>
+      <div class="settings-grid">
+        <label>Master Volume <input type="range" id="opt-master" min="0" max="100"></label>
+        <label>Music Volume <input type="range" id="opt-music" min="0" max="100"></label>
+        <label>Sound Volume <input type="range" id="opt-sound" min="0" max="100"></label>
+        <label>Difficulty
+          <select id="opt-difficulty">
+            <option value="easy">Easy</option>
+            <option value="normal">Normal</option>
+            <option value="hard">Hard</option>
+          </select>
+        </label>
+        <label>Traffic Density <input type="range" id="opt-traffic" min="0" max="100"></label>
+        <label>Pedestrian Density <input type="range" id="opt-peds" min="0" max="100"></label>
+        <label>Minimap Size
+          <select id="opt-minimap">
+            <option value="small">Small</option>
+            <option value="medium">Medium</option>
+            <option value="large">Large</option>
+          </select>
+        </label>
+        <label class="checkbox"><input type="checkbox" id="opt-shake"> Screen Shake</label>
+        <label class="checkbox"><input type="checkbox" id="opt-retro"> Retro Pixel Filter</label>
+        <label class="checkbox"><input type="checkbox" id="opt-fps"> Show FPS</label>
+      </div>
+      <div class="panel-buttons">
+        <button data-action="close-settings">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CONTROLS ===== -->
+  <div id="controls-panel" class="screen hidden">
+    <div class="panel-box wide">
+      <h2>CONTROLS</h2>
+      <div class="controls-grid">
+        <div>
+          <h3>On Foot</h3>
+          <p>W A S D — Move</p>
+          <p>Shift — Run</p>
+          <p>E — Enter / Exit Vehicle</p>
+          <p>F — Interact</p>
+          <p>Mouse / Space — Attack</p>
+          <p>R — Reload</p>
+          <p>Q — Switch Weapon</p>
+          <p>M — Map</p>
+          <p>Tab — Current Objective</p>
+          <p>Escape — Pause</p>
+        </div>
+        <div>
+          <h3>Driving</h3>
+          <p>W — Accelerate</p>
+          <p>S — Brake / Reverse</p>
+          <p>A D — Steer</p>
+          <p>Space — Handbrake</p>
+          <p>E — Exit Vehicle</p>
+          <p>H — Horn</p>
+          <p>Escape — Pause</p>
+        </div>
+      </div>
+      <div class="panel-buttons">
+        <button data-action="close-controls">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CREDITS ===== -->
+  <div id="credits-panel" class="screen hidden">
+    <div class="panel-box">
+      <h2>CREDITS</h2>
+      <p>ASHFORD BAY</p>
+      <p>An original top-down open-city game.</p>
+      <p>Design, code &amp; original assets built for this project.</p>
+      <p>All characters, vehicles, districts and story are fictional.</p>
+      <div class="panel-buttons">
+        <button data-action="close-credits">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MISSION SELECT ===== -->
+  <div id="mission-select-panel" class="screen hidden">
+    <div class="panel-box wide">
+      <h2>MISSION SELECT</h2>
+      <div id="mission-list"></div>
+      <div class="panel-buttons">
+        <button data-action="close-mission-select">Back</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MISSION RESULT ===== -->
+  <div id="mission-result" class="screen hidden">
+    <div class="panel-box">
+      <h2 id="result-title"></h2>
+      <p id="result-detail"></p>
+      <div class="panel-buttons" id="result-buttons"></div>
+    </div>
+  </div>
+
+</div>
+
+<script src="js/core.js"></script>
+<script src="js/audio.js"></script>
+<script src="js/save.js"></script>
+<script src="js/input.js"></script>
+<script src="js/world.js"></script>
+<script src="js/entities.js"></script>
+<script src="js/traffic.js"></script>
+<script src="js/pedestrians.js"></script>
+<script src="js/weapons.js"></script>
+<script src="js/police.js"></script>
+<script src="js/missions.js"></script>
+<script src="js/hud.js"></script>
+<script src="js/menu.js"></script>
+<script src="js/game.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
