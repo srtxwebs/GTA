@@ -9,10 +9,10 @@ const World = {
 };
 
 function districtPalette(d){
-  if(d===DISTRICTS.DOWNTOWN) return ['#2c2438','#33283f','#241c30','#2a2038'];
-  if(d===DISTRICTS.RESIDENTIAL) return ['#26332a','#2d3d31','#233026','#2a3a2d'];
-  if(d===DISTRICTS.INDUSTRIAL) return ['#33301f','#3a3624','#2c2a1c','#3e3a26'];
-  return ['#1f2c33','#233238','#1a262b','#28363c']; // waterfront
+  if(d===DISTRICTS.DOWNTOWN) return ['#5a5a62','#4d4d56','#63636b','#565660'];
+  if(d===DISTRICTS.RESIDENTIAL) return ['#8a6b52','#7c6248','#93725a','#7a5f46'];
+  if(d===DISTRICTS.INDUSTRIAL) return ['#6b6455','#75705f','#5e5a4c','#6f6a59'];
+  return ['#5a6b6f','#647579','#546366','#5f7074']; // waterfront
 }
 
 function generateCity(){
@@ -32,10 +32,22 @@ function generateCity(){
       const d = districtAt(cx,cy);
       const isPark = Math.random() < (d===DISTRICTS.RESIDENTIAL ? 0.22 : 0.08);
       const palette = districtPalette(d);
+      const roofRoll = Math.random();
+      const roofType = roofRoll<0.15 ? 'helipad' : (roofRoll<0.55 ? 'vents' : 'plain');
+      let trees = null;
+      if(isPark){
+        trees = [];
+        const count = irand(3,7);
+        for(let t=0;t<count;t++){
+          trees.push({ x: rand(w*0.12,w*0.88), y: rand(h*0.12,h*0.88), r: rand(9,15) });
+        }
+      }
       World.buildings.push({
         x,y,w,h,
-        color: isPark ? '#203a28' : palette[irand(0,palette.length-1)],
+        color: isPark ? '#2a4a30' : palette[irand(0,palette.length-1)],
         isPark,
+        roofType,
+        trees,
         district:d
       });
     }
